@@ -1,0 +1,234 @@
+<div class="container p-2">
+<style>
+    .header{padding:50px;background: #af075e; color:#fff}
+    .day{padding:20px; font-size:20px }
+    .day:hover{background: #af075e; color:#ffff}
+    .day a{text-decoration: none;display:flex; justify-content: center; align-items: center; cursor: pointer;}
+    .table-bordered{border: solid 5px #d8d8d8; border-radius: 25%;}
+    .pagination .bi {font-size:30px;color: #af075e;}
+
+</style> 
+
+<?php
+$total_reg = "1";
+$pc="12";
+
+$inicio = $pc - 1;
+$inicio = $inicio * $total_reg;
+$tr="3";
+$tp = $tr / $total_reg; 
+
+
+
+$pagina=$_GET['pagina'];
+if (!$pagina) {
+$pc = "1";
+} else {
+$pc = $pagina;
+}
+
+
+setlocale(LC_TIME, 'pt_BR', 'pt_BR.utf-8', 'pt_BR.utf-8', 'portuguese');
+date_default_timezone_set('America/Sao_Paulo');
+$monthToday = date('Y-m-d', strtotime("+ $pagina month")); 
+$nomeMes=strftime(' %B %Y', strtotime($monthToday));
+$mesToday = date('Y-m', strtotime("+ $pagina month")); 
+
+
+
+$dateComponents = getdate();
+$mes=date('m');
+$month = date('m', strtotime("+ $pagina month",strtotime($mes)));                 
+$year = date('Y');
+
+
+
+function my_calendar($month,$year) {
+
+     // Cria uma matriz contendo abreviações de dias da semana.
+     $daysOfWeek = array('Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'); 
+     // Qual é o primeiro dia do mês em questão?
+     $firstDayOfMonth = mktime(0,0,0,$month,1,$year);
+     // Quantos dias este mês contém?
+     $numberDays = date('t',$firstDayOfMonth);
+     // Recupere algumas informações sobre o primeiro dia do mês em questão.
+     $dateComponents = getdate($firstDayOfMonth);
+     // Qual é o valor do índice (0-6) do primeiro dia do mês em questão.
+     $dayOfWeek = $dateComponents['wday'];
+     //cabeçalho
+     $calendar = "<table class=' table-bordered'>";
+     $calendar .= "<tbody>";
+     $calendar .= "<tr>";
+     // Cria os cabeçalhos do calendário
+
+     foreach($daysOfWeek as $day) {
+          $calendar .= "<th class='header'>$day</th>";
+     } 
+
+     /* Cria o resto do calendário
+        Inicia o contador de dias, começando com o 1º. */
+
+     $currentDay = 1;
+     $calendar .= "</tr><tr>";
+
+     /* A variável $dayOfWeek é usada para
+        garantir que o calendário
+        display consiste em exatamente 7 colunas. */
+
+     if ($dayOfWeek > 0) { 
+          $calendar .= "<td colspan='$dayOfWeek'>&nbsp;</td>"; 
+     }
+
+     $month = str_pad($month, 2, "0", STR_PAD_LEFT);
+
+     while ($currentDay <= $numberDays) {
+
+          //Sétima coluna (sábado) alcançada. Comece uma nova linha.
+
+          if ($dayOfWeek == 7) {
+
+               $dayOfWeek = 0;
+               $calendar .= "</tr><tr>";
+
+          }
+
+          $currentDayRel = str_pad($currentDay, 2, "0", STR_PAD_LEFT);
+          $date = "$year-$month-$currentDayRel";
+          $calendar .= "<td class='day' rel='$date'><a data-bs-toggle=\"modal\" data-bs-target=\"#exampleModal$currentDayRel\">$currentDay</a></td>";
+          //Incremento 
+          $currentDay++;
+          $dayOfWeek++;
+
+        ?>
+          <div class="modal fade" id="exampleModal<?=$currentDayRel?>" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="exampleModalLabel"><?=$currentDayRel?></h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+              
+                <?php
+              
+                $pagina=$_GET['pagina'];
+                if (!$pagina) {
+                $pc = "1";
+                } else {
+                $pc = $pagina;
+                }
+
+                $mesToday2 = date('Y-m', strtotime("+ $pagina month")); 
+                $diaBusca=$mesToday2."-".$currentDayRel; 
+
+                include '../login/conexao.php';
+                if ($conn->connect_error) {
+                    die("Connection failed: " . $conn->connect_error);
+                }
+                
+                $sql = "SELECT * FROM reserva_sala where data_ini='$diaBusca' order by hora_ini desc";
+                $result = $conn->query($sql);
+                $counter = 0;
+                if ($result->num_rows > 0) {
+                    // output data of each row
+                    while($row = $result->fetch_assoc()) {
+                    $nome=$row["nome"];
+                    $id=$row["id"];
+                    $hora_ini=$row["hora_ini"];
+                    $hora_fim=$row["hora_fim"];
+                    $data_ini=$row["data_ini"];
+                    $data_i=date('d/m/Y', strtotime($data_ini));
+                    $data_fim=$row["data_fim"];
+                    $data_f=date('d/m/Y', strtotime($data_fim));
+
+                    
+                    $counter++;
+
+                  
+
+                    echo "<div class=\"alert alert-success d-flex justify-content-between\" role=\"alert\">
+                                $nome - $hora_ini/$hora_fim 
+                            </div>";
+
+                    }
+                } else {
+                    echo "<h3 class='text-center'>Livre!!!</h3>";
+                }
+
+
+                if($counter=="0"){
+                    echo "<div class=\"alert alert-secondary d-flex justify-content-center \" role=\"alert\">
+                                    Sem reservas nesse dia.
+                            </div>"; 
+                }else{
+                    echo "<div class=\"alert alert-primary d-flex justify-content-between\" role=\"alert\">
+                    Total de Reservas $counter
+                            </div>";
+                }
+               
+
+               
+                $conn->close();
+
+                
+                ?>
+                
+                </div>
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+<?php
+
+
+     }
+
+     if ($dayOfWeek != 7) { 
+          $remainingDays = 7 - $dayOfWeek;
+          $calendar .= "<td colspan='$remainingDays'>&nbsp;</td>"; 
+     }
+
+     $calendar .= "</tr>";
+     $calendar .= "</tbody>";
+     $calendar .= "</table>";
+
+     return $calendar;
+
+}
+
+?> 
+<div class="d-flex align-items-center justify-content-between">
+    <div class="text-uppercase ">
+        <?=$nomeMes;?>
+    </div>
+    <div class="pagination">
+        <?php
+        $anterior = $pc -1;
+        $proximo = $pc +1;
+        if ($pc>0) {
+            echo " <a href='?sala=$sala&pagina=$anterior'><i class=\"bi bi-arrow-left-square-fill\"></i></a> ";
+        }
+        echo "<i class=\"bi bi-three-dots-vertical\"></i>";
+        if ($pc<$tp) {
+            echo " <a href='?sala=$sala&pagina=$proximo'><i class=\"bi bi-arrow-right-square-fill\"></i></a>";
+        }
+    
+        ?>
+    </div>
+    
+
+</div>
+<?php
+
+
+
+
+
+echo my_calendar($month,$year);
+
+
+?>
+
