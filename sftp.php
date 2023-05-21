@@ -2,7 +2,8 @@
 
 // baixar blibioteca
 
-
+require_once __DIR__ . '/vendor/autoload.php';
+use Hug\Sftp\Sftp as Sftp;
 
 
 
