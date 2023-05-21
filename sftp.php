@@ -137,6 +137,10 @@ var_dump($test);
 
 
 
+// Obs: no arquivo SFTP.php  linha 65 ->   const SOURCE_LOCAL_FILE = 0;
+
+
+
 # Scan directory again
 $test = Sftp::scandir($FtpServer, $FtpUser, $FtpPass, $FtpPath, $FtpPort);
 echo "scandir";
