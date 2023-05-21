@@ -2,6 +2,9 @@
 
 // baixar blibioteca
 
+composer require hugsbrugs/php-sftp
+
+
 require_once __DIR__ . '/vendor/autoload.php';
 use Hug\Sftp\Sftp as Sftp;
 
